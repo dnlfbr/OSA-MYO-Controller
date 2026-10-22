@@ -1,5 +1,5 @@
 /* OSA MYO Controller: base values (colours, type, spacing, motion) and shared controls.
-   Dark by default, <html data-theme="light"> for the light theme. */
+   One theme, dark. */
 
 @import url("fonts/fonts.css");
 
@@ -70,46 +70,6 @@
   --ui-track: rgba(255,255,255,0.07);
   --ui-focus: 0 0 0 1px var(--ui-cyan);
   --ui-color-scheme: dark;
-}
-:root[data-theme="light"] {
-  --ui-void: #FFFFFF;
-  --ui-bg: #F4F2EE;
-  --ui-panel: #ECEAE4;
-  --ui-card: #FFFFFF;
-  --ui-elev: #FBFAF7;
-  --ui-line: #E2DED6;
-  --ui-line-2: #CFCABF;
-  --ui-line-3: #A89F90;
-  --ui-grid: #EAE7E0;
-  --ui-ink: #1A1714;
-  --ui-ink-2: #4A443B;
-  --ui-ink-3: #6A6358;
-  --ui-label: #837B70;
-  --ui-ghost: #ABA396;
-  --ui-disabled-ink: #C4BDB2;
-  --ui-copper: #B5703F;
-  --ui-copper-deep: #8F562F;
-  --ui-amber: #9A7A30;
-  --ui-cyan: #2E8E9A;
-  --ui-cyan-deep: #226A74;
-  --ui-magenta: #A8327E;
-  --ui-ok: #2E8E3A;
-  --ui-warn: #9A7A30;
-  --ui-bad: #A83030;
-  --ui-spectrum: linear-gradient(90deg, #B5703F 0%, #9A7A30 50%, #2E8E9A 100%);
-  --ui-glow-copper: 0 0 0 1px rgba(181,112,63,0.45);
-  --ui-glow-copper-soft: 0 0 6px rgba(181,112,63,0.14);
-  --ui-glow-cyan: 0 0 0 1px rgba(46,142,154,0.45);
-  --ui-glow-cyan-soft: 0 0 6px rgba(46,142,154,0.14);
-  --ui-glow-amber: 0 0 0 1px rgba(154,122,48,0.45);
-  --ui-glow-amber-soft: 0 0 6px rgba(154,122,48,0.14);
-  --ui-scrim: rgba(20,18,16,0.32);
-  --ui-track: rgba(20,18,16,0.07);
-  --ui-surface: var(--ui-card);
-  --ui-surface-on: rgba(20,18,16,0.07);
-  --ui-ambient: radial-gradient(60% 45% at 100% 0%, rgba(181,112,63,0.06), transparent 70%), radial-gradient(50% 40% at 0% 100%, rgba(46,142,154,0.05), transparent 70%);
-  --ui-focus: 0 0 0 1px var(--ui-cyan);
-  --ui-color-scheme: light;
 }
 [data-density="touch"] {
   --ui-radius: 10px;

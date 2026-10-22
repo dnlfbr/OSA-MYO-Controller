@@ -1,5 +1,4 @@
-/** Canvas colours and fonts read from the CSS variables, so plots follow [data-theme]. Re-read on
- * the "ui-theme" event and when the colour scheme changes. */
+/** Canvas colours and fonts read once from the CSS variables, so plots and the page share them. */
 
 export type RGB = [number, number, number];
 
@@ -14,7 +13,6 @@ export interface Palette {
 const read = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
 let current: Palette | null = null;
-const listeners = new Set<() => void>();
 
 export function palette(): Palette {
   if (current) return current;
@@ -31,20 +29,6 @@ export function palette(): Palette {
   p.axis = [p.copper, p.amber, p.cyan, p.ink2];
   current = p;
   return p;
-}
-
-export function onPalette(fn: () => void): void {
-  listeners.add(fn);
-}
-
-function invalidate(): void {
-  current = null;
-  for (const fn of listeners) fn();
-}
-
-if (typeof window !== "undefined") {
-  window.addEventListener("ui-theme", invalidate);
-  window.matchMedia?.("(prefers-color-scheme: light)").addEventListener?.("change", invalidate);
 }
 
 /** A token value ("#RRGGBB" or the rgb/rgba function form) -> [r, g, b] in 0..1. */

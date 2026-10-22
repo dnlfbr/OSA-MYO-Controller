@@ -89,11 +89,10 @@ Full tables, scaling and rates: [docs/guide.md](docs/guide.md#osc-output).
 `NEW WINDOW` opens one band in its own window; `SETTINGS` edits every option of
 `config.toml` live.
 
-![The web version, light theme](docs/images/web-light.png)
+![The web version with the simulated armband](docs/images/web.png)
 
 The **web version** (`web/`) runs the same protocol, monitor and OSC addresses in Chrome or
-Edge over Web Bluetooth, for one band; a small relay turns its messages into OSC. Dark and
-light themes.
+Edge over Web Bluetooth, for one band; a small relay turns its messages into OSC.
 
 ```bash
 cd web && npm install && npm run dev   # http://localhost:5173, then CONNECT MYO or DEMO

@@ -14,7 +14,8 @@ All notable changes to OSA MYO Controller (called myo-bridge until 2026-10). For
   `OSA-MYO-Controller-Web.app` / `.exe`.
 - GUI polish (desktop and web): gesture names fit their tiles, EMG channel tags on a veil,
   events wrap with a hanging indent, settings labels and hints wrap, fixed number locale (6.00),
-  columns rebalanced; the web styles now live in `web/src/ui/` with self-hosted fonts.
+  columns rebalanced; the web styles now live in `web/src/ui/` with self-hosted fonts. The web
+  version has one theme, dark, like the app (the light variant is gone).
 - README rewritten, with screenshots.
 
 ### Web version (first version)
