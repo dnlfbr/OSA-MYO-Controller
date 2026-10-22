@@ -1,0 +1,24 @@
+{
+  "name": "osa-myo-controller-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OSA MYO Controller in the browser: Web Bluetooth driver, monitor and OSC relay for the Myo armband",
+  "license": "MIT",
+  "author": "Daniele Fabris, Simone Arganini",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "relay": "node relay/myo-osc-relay.mjs",
+    "kit": "node scripts/make-kit.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/web-bluetooth": "^0.0.20",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
+  }
+}

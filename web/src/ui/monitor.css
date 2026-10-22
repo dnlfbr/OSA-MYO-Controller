@@ -1,0 +1,15 @@
+/* The kit's OSC monitor page (monitor.html), on the monitor's own styles (app.css). Tokens only. */
+
+body.monitor { height: auto; min-height: 100vh; overflow: auto; }
+.mon { padding: var(--ui-s2); }
+.mon .panel { max-width: calc(var(--ui-s5) * 24); }
+.mon .hint { margin: var(--ui-s1) 0; }
+.mon-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.mon-table th { text-align: left; font-weight: 400; padding: var(--ui-half) var(--ui-s1); border-bottom: var(--ui-hairline) solid var(--ui-line-2); }
+.mon-table th:first-child { width: calc(var(--ui-s5) * 5); }
+.mon-table th.num { width: calc(var(--ui-s5) * 2); text-align: right; }
+.mon-table td { padding: var(--ui-half) var(--ui-s1); border-bottom: var(--ui-hairline) solid var(--ui-line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mon-table td.addr { color: var(--ui-ink); }
+.mon-table td.num { text-align: right; font-size: var(--ui-fs-sm); }
+.mon-table td.vals { color: var(--ui-ink-2); }
+.mon-table tr.idle td { color: var(--ui-label); }

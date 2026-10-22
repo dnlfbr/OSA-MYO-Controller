@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OSA MYO Controller · OSC monitor</title>
+  <link rel="icon" type="image/png" href="./icon.png" />
+</head>
+<body class="monitor">
+  <!-- served by the test kit's app (kit/launcher.mjs): the OSC arriving on the OSC port, as an
+       OSC receiver such as Max would see it. The app listens on the port only while this is open. -->
+  <header class="toolbar">
+    <span class="wordmark"><span class="wm-osa">OSA</span> <span class="wm-name">MYO Controller</span></span>
+    <span class="lbl edition">web</span>
+    <span class="cap tb-gap">OSC MONITOR</span>
+    <span id="m-state" class="lamp" data-state="off">OFF</span>
+    <span id="m-port" class="lbl"></span>
+  </header>
+  <main class="mon">
+    <section class="panel stripe">
+      <div class="panel-head"><h2 class="title">Received</h2><span id="m-count" class="lbl"></span></div>
+      <p id="m-hint" class="hint">Connecting to the kit app…</p>
+      <table id="m-table" class="mon-table" hidden>
+        <thead><tr><th class="cap">Address</th><th class="cap num">Msg/s</th><th class="cap">Last values</th></tr></thead>
+        <tbody id="m-rows"></tbody>
+      </table>
+    </section>
+  </main>
+  <script type="module" src="./src/monitor.ts"></script>
+</body>
+</html>

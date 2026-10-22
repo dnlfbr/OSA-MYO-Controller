@@ -1,0 +1,97 @@
+# OSA MYO Controller configuration. Copy to ./config.toml or
+# ~/Library/Application Support/osa-myo-controller/config.toml. Every key is optional.
+#
+# A file that cannot be parsed is renamed config.toml.broken-<date-time> and the defaults are
+# used; an invalid value is reset to its default. Both show up in the monitor's event feed.
+#
+# transport: bleak (built-in Bluetooth, default) | bled112 (BLED112 USB dongle) | mock
+# dongle_port: the dongle's serial port, e.g. /dev/cu.usbmodem11; "" = auto-detect
+#   (`osa-myo ports` lists the candidates)
+# devices: one [[devices]] table per armband slot (/myo/1, /myo/2, ...). selector = name, or the
+#   address from `osa-myo scan` (a UUID with bleak, a MAC with the dongle; empty = first free
+#   band); serial = recorded on connect, locks the slot to that band with either adapter.
+#   label = name shown in the monitor (max 32 characters; "" = the Bluetooth name; macOS can't
+#   rename the band itself).
+#   emg_mode 0 off | 1 smooth 50 Hz (undocumented) | 2 filtered | 3 raw;  imu_mode 0 off | 1 data |
+#   2 events (taps only, no motion data) | 3 all | 4 raw;  classifier_mode 0/1;
+#   double_tap_origin = the double-tap pose sets the origin (SET ORIGIN), the band vibrates once;
+#   zero_quat = saved SET ORIGIN reference (w x y z)
+# osc.preset default | myomapper;  osc.mode vector | axis;  osc.streams: per-address toggles
+#   (fv = /emg/smooth, EMG mode smooth)
+# osc_in: control server (/myo/<id>/vibrate|lock|unlock|zero|mode|sleep|led|resync, /myo/all/...;
+#   /myo/<id>/poweroff 1 switches a band off: it wakes only on USB power)
+# processing.zero_mode yaw | full;  tap_threshold_g: drop taps whose knock is weaker (largest change
+#   of acceleration around the tap, needs imu_mode 3; the event feed shows each tap's strength_g);
+#   tap_cooldown_ms: drop taps closer than this to the last kept one. 0 = off.
+# gui.emg_scale 2 | 4 | 8 | 16 | 32 | 64 | 128;  gui.orient_view behind | side | top | mirror
+
+transport = "bleak"
+dongle_port = ""
+scan_timeout_s = 6.0
+
+[[devices]]
+label = ""
+selector = ""
+serial = ""
+emg_mode = 3
+imu_mode = 3
+classifier_mode = 1
+never_sleep = true
+double_tap_origin = false
+zero_quat = []
+
+[osc]
+host = "127.0.0.1"
+port = 7400
+enabled = true
+preset = "default"
+mode = "vector"
+emg_bundle_samples = 4
+imu_rate_hz = 50.0
+rms_rate_hz = 50.0
+
+[osc.streams]
+emg_raw = true
+emg_norm = false
+emg_rms = true
+emg_mav = true
+quat = true
+quat_raw = false
+euler = true
+euler_deg = false
+euler_norm = false
+accel = true
+gyro = true
+pose = true
+arm = true
+sync = true
+lock = true
+battery = true
+rssi = true
+status = true
+tap = true
+firmware = true
+fv = true
+
+[osc_in]
+enabled = true
+host = "0.0.0.0"
+port = 7401
+
+[processing]
+rms_window_ms = 50.0
+zero_mode = "yaw"
+euler_order = "zyx"
+gyro_norm_range = 1000.0
+accel_norm_range = 2.0
+tap_threshold_g = 0.0
+tap_cooldown_ms = 0.0
+
+[gui]
+emg_window_s = 2.0
+emg_scale = 64.0
+emg_autoscale = false
+imu_window_s = 5.0
+fps = 60
+orient_view = "behind"
+

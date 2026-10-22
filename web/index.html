@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OSA MYO Controller · web</title>
+  <meta name="description" content="Open Myo Connect replacement in the browser: Myo armband over Web Bluetooth, monitor and OSC." />
+  <link rel="icon" type="image/png" href="./icon.png" />
+</head>
+<body>
+  <!-- the same layout as the macOS app (src/myo_bridge/gui/monitor.py): toolbar, armband sidebar
+       with battery and link, device header, three columns, status bar -->
+  <header class="toolbar">
+    <button id="wordmark" class="wordmark" type="button" title="About OSA MYO Controller: authors and credits"><span class="wm-osa">OSA</span> <span class="wm-name">MYO Controller</span></button>
+    <span class="lbl edition">web</span>
+    <span class="cap tb-gap">OSC RELAY</span>
+    <input id="relay-url" class="field relay-url" spellcheck="false" autocomplete="off" title="WebSocket of the OSC relay (node relay/myo-osc-relay.mjs)" />
+    <button id="btn-relay-apply" class="ui-btn">APPLY</button>
+    <label class="check" title="Send OSC through the relay"><input id="ck-send" type="checkbox" /><span>SEND</span></label>
+    <span id="relay-state" class="lamp" data-state="off">OFF</span>
+    <span id="tb-info" class="lbl tb-info">WEB BLUETOOTH · PRESET DEFAULT · MODE VECTOR · CONTROL IN VIA RELAY</span>
+    <a id="btn-monitor" class="ui-btn" href="monitor" target="_blank" rel="noopener" hidden title="Shows the OSC arriving on the OSC port, without Max (close Max first)">OSC MONITOR</a>
+    <button id="btn-settings" class="ui-btn">SETTINGS</button>
+    <button id="btn-about" class="ui-btn">ABOUT</button>
+    <button id="btn-save-log" class="ui-btn accent" title="Download the whole session log as a text file (for test reports)">SAVE LOG</button>
+  </header>
+
+  <div class="shell">
+    <aside class="sidebar" aria-label="Armbands">
+      <div class="side-block">
+        <div class="side-head"><h2 class="title">Armbands</h2><span class="lbl">1 slot</span></div>
+        <div class="panel slot sel" title="The armband on screen">
+          <span id="s-dot" class="dot-led"></span>
+          <div class="slot-main"><span id="s-name" class="slot-name">Myo 1</span><span id="s-sub" class="lbl">DISCONNECTED</span></div>
+          <div class="slot-side"><span class="lbl">#1</span><span id="s-rssi" class="vsm"></span></div>
+        </div>
+        <div class="btn-row">
+          <button class="ui-btn accent" data-act="connect" title="Choose a Myo in the browser's Bluetooth chooser">CONNECT MYO</button>
+          <button class="ui-btn" data-act="disconnect">DISCONNECT</button>
+        </div>
+      </div>
+
+      <div class="side-block side-sim">
+        <div class="side-head"><h2 class="title">Simulator</h2>
+          <button id="btn-demo" class="ui-btn side-btn" title="A simulated armband: no hardware needed">DEMO</button>
+        </div>
+        <div class="btn-row demo-only" hidden>
+          <button id="btn-sim-tap" class="ui-btn">TAP</button>
+          <button id="btn-sim-loss" class="ui-btn">LINK LOSS</button>
+        </div>
+        <p class="hint side-hint">CONNECT MYO opens the browser's Bluetooth chooser: wake the band, pick it, confirm. DEMO runs a simulated armband.</p>
+      </div>
+
+      <section class="panel stripe battery" aria-labelledby="h-batt">
+        <div class="panel-head"><h2 id="h-batt" class="title">Battery</h2><span id="b-pct" class="val">—</span></div>
+        <div class="meter"><span id="b-fill"></span></div>
+        <span id="b-checked" class="lbl">not read yet</span>
+      </section>
+
+      <section class="panel stripe link" aria-labelledby="h-link">
+        <div class="panel-head"><h2 id="h-link" class="title">Link</h2>
+          <span id="l-pct" class="val" title="Web Bluetooth reports no RSSI: here LINK is the share of the expected packets that arrive">—</span></div>
+        <canvas id="cv-link" class="link-bars" aria-label="Link history"></canvas>
+        <div class="kv">
+          <span class="lbl">RSSI</span><span class="lbl">EMG HZ</span><span class="lbl">IMU HZ</span>
+          <span class="vsm na" title="Web Bluetooth doesn't report it">n/a</span><span id="l-emg" class="vsm">—</span><span id="l-imu" class="vsm">—</span>
+          <span class="lbl">DROP</span><span class="lbl">LAT MS</span><span class="lbl">OSC</span>
+          <span id="l-drop" class="vsm">—</span><span class="vsm">—</span><span id="l-osc" class="vsm">—</span>
+        </div>
+      </section>
+    </aside>
+
+    <div class="center">
+      <div id="problem" class="banner" hidden></div>
+
+      <section class="panel stripe devhead" aria-label="Armband">
+        <span class="myo-badge">MYO 1</span>
+        <div class="fld"><span class="cap">STATUS<span id="badge-sim" class="sim-tag" hidden title="Data from the built-in simulator, not from an armband"> · SIMULATED</span></span><span id="v-status" class="status" data-state="disconnected">DISCONNECTED</span></div>
+        <span class="vline"></span>
+        <div class="fld"><span class="cap">SYNC</span><span id="v-sync" class="pill wide">UNSYNCED</span></div>
+        <div class="fld"><span class="cap">LOCK</span><span id="v-lock" class="pill wide">LOCKED</span></div>
+        <div class="fld"><span class="cap">ARM</span>
+          <span class="arm-row"><span id="arm-l" class="pill compact">L</span><span id="arm-r" class="pill compact">R</span><span id="v-arm" class="vsm arm-text">—</span></span>
+        </div>
+        <span class="grow"></span>
+        <span class="vline"></span>
+        <div class="facts">
+          <span class="cap">DEVICE</span><span class="cap">SERIAL</span><span class="cap">FIRMWARE</span>
+          <span id="v-name" class="vsm f-name">—</span><span id="v-serial" class="vsm">—</span><span id="v-fw" class="vsm">—</span>
+        </div>
+      </section>
+
+      <main class="cols">
+        <div class="col col-1">
+          <section class="panel stripe controls" aria-labelledby="h-controls">
+            <div class="panel-head"><h2 id="h-controls" class="title">Controls</h2>
+              <button class="ui-btn accent" data-act="connect" title="Choose a Myo in the browser's Bluetooth chooser">CONNECT</button>
+              <button class="ui-btn" data-act="disconnect">DISCONNECT</button>
+            </div>
+            <div class="ctl-grid">
+              <span class="cap">POSES</span>
+              <button id="btn-resync" class="ui-btn accent s2" data-needs="link" title="Reset the band's pose classifier, then make the sync gesture (wave out and hold) to sync again">RE-SYNC</button>
+              <button id="btn-unlock" class="ui-btn s2" data-needs="link">UNLOCK</button>
+              <button id="btn-lock" class="ui-btn s2" data-needs="link">LOCK</button>
+              <span class="cap">VIBRATE</span>
+              <button class="ui-btn s2" data-vibrate="1" data-needs="link">SHORT</button>
+              <button class="ui-btn s2" data-vibrate="2" data-needs="link">MEDIUM</button>
+              <button class="ui-btn s2" data-vibrate="3" data-needs="link">LONG</button>
+              <span class="cap">ORIGIN</span>
+              <button id="btn-origin" class="ui-btn accent s3" data-needs="link" title="The current orientation becomes the origin (also /myo/1/zero)">SET ORIGIN</button>
+              <button id="btn-origin-clear" class="ui-btn s3">CLEAR</button>
+              <span class="sep"></span>
+              <span class="cap">MODES</span>
+              <div class="modes">
+                <select id="sel-emg" class="ui-select" aria-label="EMG mode">
+                  <option value="0" title="EMG off: no muscle data">EMG off</option>
+                  <option value="1" title="EMG smooth: the band's own envelope of each pod, 50 Hz (undocumented mode). OSC: /myo/1/emg/smooth">EMG smooth</option>
+                  <option value="2" title="EMG filtered: 200 Hz samples per pod, filtered by the band (int8). OSC: /emg/raw, /emg/rms, /emg/mav">EMG filt.</option>
+                  <option value="3" title="EMG raw: 200 Hz samples per pod, unfiltered (int8). OSC: /emg/raw, /emg/rms, /emg/mav">EMG raw</option>
+                </select>
+                <select id="sel-imu" class="ui-select" aria-label="IMU mode">
+                  <option value="0" title="IMU off: no motion data, no taps">IMU off</option>
+                  <option value="1" title="IMU data: orientation, acceleration and gyroscope, 50 Hz">IMU data</option>
+                  <option value="2" title="IMU events: only tap events, no motion data">IMU evt</option>
+                  <option value="3" title="IMU all: motion data and tap events">IMU all</option>
+                  <option value="4" title="IMU raw: undocumented mode, handled like data">IMU raw</option>
+                </select>
+                <select id="sel-cls" class="ui-select" aria-label="Pose classifier">
+                  <option value="0" title="Pose classifier off: no poses, no sync">POSE off</option>
+                  <option value="1" title="Pose classifier on: poses after the sync gesture (wave out and hold)">POSE on</option>
+                </select>
+              </div>
+              <span class="cap">POWER</span>
+              <button id="btn-sleep" class="ui-btn ui-toggle s4" title="Keep the band awake (re-sent every 10 s)">NEVER SLEEP</button>
+              <button id="btn-poweroff" class="ui-btn danger s2" data-needs="link" title="Switch the band off (deep sleep). It wakes up only when plugged into USB.">POWER OFF</button>
+            </div>
+          </section>
+
+          <section class="panel stripe orientation" aria-labelledby="h-orient">
+            <div class="panel-head"><h2 id="h-orient" class="title">Orientation</h2>
+              <label class="lbl" for="sel-view">VIEW</label>
+              <select id="sel-view" class="ui-select"></select>
+              <button id="btn-flip" class="ui-btn ui-toggle" title="Swap the hand and elbow ends of the model, if the sync didn't report which way the band is worn">FLIP</button>
+            </div>
+            <canvas id="cv-arm" class="arm"></canvas>
+            <p id="orient-hint" class="hint"></p>
+            <div class="euler">
+              <span class="cap">ROLL</span><span class="cap">PITCH</span><span class="cap">YAW</span><span></span>
+              <span id="v-roll" class="val">—</span><span id="v-pitch" class="val">—</span><span id="v-yaw" class="val">—</span><span></span>
+              <span class="q"><span class="lbl ax0">X</span><span id="v-qx" class="vsm">—</span></span>
+              <span class="q"><span class="lbl ax1">Y</span><span id="v-qy" class="vsm">—</span></span>
+              <span class="q"><span class="lbl ax2">Z</span><span id="v-qz" class="vsm">—</span></span>
+              <span class="q"><span class="lbl ax3">W</span><span id="v-qw" class="vsm">—</span></span>
+            </div>
+          </section>
+        </div>
+
+        <div class="col col-2">
+          <section class="panel stripe imu" aria-labelledby="h-imu">
+            <div class="panel-head"><h2 id="h-imu" class="title">IMU</h2>
+              <select id="sel-imu-window" class="ui-select" title="Time window">
+                <option value="2">2 s</option><option value="5">5 s</option><option value="10">10 s</option>
+              </select>
+            </div>
+            <div class="strips">
+              <div class="strip"><div class="strip-head"><span class="cap">GYRO</span><span class="lbl">deg/s</span><span class="legend" data-axes="xyz"></span></div><canvas id="cv-gyro"></canvas></div>
+              <div class="strip"><div class="strip-head"><span class="cap">ACCEL</span><span class="lbl">g</span><span class="legend" data-axes="xyz"></span></div><canvas id="cv-accel"></canvas></div>
+              <div class="strip"><div class="strip-head"><span class="cap">QUAT</span><span class="lbl">unit</span><span class="legend" data-axes="xyzw"></span></div><canvas id="cv-quat"></canvas></div>
+            </div>
+          </section>
+
+          <section class="panel stripe gesture" aria-labelledby="h-gesture">
+            <div class="panel-head"><h2 id="h-gesture" class="title">Gesture</h2>
+              <span id="gesture-hint" class="hint head-hint"></span>
+              <button id="btn-tap-origin" class="ui-btn ui-toggle" title="The double-tap pose sets the origin, like SET ORIGIN, and the band vibrates once. Needs POSE on, a synced band and IMU data.">2× TAP → ORIGIN</button>
+            </div>
+            <div id="tiles" class="tiles"></div>
+            <div class="gesture-row">
+              <span class="cap">CURRENT POSE</span><span id="cap-activity" class="cap">POD ACTIVITY · RMS</span>
+              <span id="v-pose" class="big">REST</span><canvas id="cv-bars"></canvas>
+            </div>
+          </section>
+        </div>
+
+        <div class="col col-3">
+          <section class="panel stripe emg" aria-labelledby="h-emg">
+            <div class="panel-head"><h2 id="h-emg" class="title">EMG</h2>
+              <select id="sel-emg-window" class="ui-select" title="Time window">
+                <option value="0.5">0.5 s</option><option value="1">1 s</option><option value="2">2 s</option><option value="5">5 s</option><option value="10">10 s</option>
+              </select>
+              <select id="sel-emg-scale" class="ui-select" title="Y scale"></select>
+              <label class="check" title="Scale each pod to its own signal (the tags show the range)"><input id="ck-emg-auto" type="checkbox" /><span>AUTO</span></label>
+              <button id="btn-emg-pause" class="ui-btn pause">PAUSE</button>
+            </div>
+            <div class="pods" id="pods"></div>
+          </section>
+
+          <section class="panel stripe events" aria-labelledby="h-events">
+            <div class="panel-head"><h2 id="h-events" class="title">Events</h2>
+              <button id="btn-events-clear" class="ui-btn">CLEAR</button>
+            </div>
+            <div id="events" class="event-box" aria-live="polite">
+              <p id="events-empty" class="hint empty">Nothing yet. Connect an armband, or try the demo.</p>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <footer class="statusbar">
+    <span id="sb-msg" class="sb-msg"></span>
+    <span id="sb-stats" class="lbl sb-stats"></span>
+  </footer>
+
+  <dialog id="dlg-settings" class="ui-modal dialog" aria-labelledby="h-settings">
+    <form method="dialog">
+      <div class="ui-spectrum"></div>
+      <header class="dialog-head"><h2 id="h-settings" class="ui-headline">Settings</h2></header>
+      <div class="dialog-body">
+        <section>
+          <h3 class="ui-eyebrow">OSC streams</h3>
+          <p class="ui-body-sm">Addresses as the Python bridge, namespace "default": /myo/1/…</p>
+          <div id="streams" class="streams"></div>
+          <div class="row"><label class="ui-label-txt rl" for="in-imu-rate">IMU RATE</label><input id="in-imu-rate" class="field num" type="number" min="0" max="200" step="1" /><span class="ui-label-txt">Hz · 0 = every packet</span></div>
+          <div class="row"><label class="ui-label-txt rl" for="in-rms-rate">RMS RATE</label><input id="in-rms-rate" class="field num" type="number" min="0" max="200" step="1" /><span class="ui-label-txt">Hz</span></div>
+        </section>
+        <section>
+          <h3 class="ui-eyebrow">Processing</h3>
+          <div class="row"><label class="ui-label-txt rl" for="in-rms">RMS WINDOW</label><input id="in-rms" class="field num" type="number" min="5" max="1000" step="5" /><span class="ui-label-txt">ms</span></div>
+          <div class="row"><label class="ui-label-txt rl" for="sel-zero">ORIGIN</label>
+            <select id="sel-zero" class="ui-select"><option value="yaw">YAW ONLY</option><option value="full">FULL</option></select>
+          </div>
+          <div class="row"><label class="ui-label-txt rl" for="in-tap-g">TAP MIN</label><input id="in-tap-g" class="field num" type="number" min="0" max="8" step="0.05" /><span class="ui-label-txt">g · 0 = off, needs IMU ALL</span></div>
+          <div class="row"><label class="ui-label-txt rl" for="in-tap-ms">TAP GAP</label><input id="in-tap-ms" class="field num" type="number" min="0" max="5000" step="10" /><span class="ui-label-txt">ms · 0 = off</span></div>
+        </section>
+        <section>
+          <h3 class="ui-eyebrow">On connect</h3>
+          <div class="row">
+            <button type="button" id="btn-vib-connect" class="ui-btn ui-toggle">VIBRATE</button>
+            <button type="button" id="btn-unlock-sync" class="ui-btn ui-toggle" title="Unlock (hold) after each sync, so every pose is reported">UNLOCK ON SYNC</button>
+          </div>
+          <p class="ui-body-sm">Applied at the next connection.</p>
+        </section>
+      </div>
+      <footer class="dialog-foot"><button class="ui-btn" value="close">CLOSE</button></footer>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-about" class="ui-modal dialog about" aria-labelledby="h-about">
+    <form method="dialog">
+      <div class="ui-spectrum"></div>
+      <div class="dialog-body" id="about-body"></div>
+      <footer class="dialog-foot"><button class="ui-btn" value="close">CLOSE</button></footer>
+    </form>
+  </dialog>
+
+  <script type="module" src="./src/main.ts"></script>
+</body>
+</html>
